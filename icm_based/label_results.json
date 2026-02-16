@@ -1,0 +1,272 @@
+[
+  {
+    "question": "What is the capital of France?",
+    "claim": "The capital of France is Paris",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -66.449522,
+    "log_prob_false": -1.2171,
+    "confidence": 0.998
+  },
+  {
+    "question": "What is the capital of France?",
+    "claim": "The capital of France is London",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -33.184101,
+    "log_prob_false": -1.355976,
+    "confidence": 0.998
+  },
+  {
+    "question": "What is the capital of France?",
+    "claim": "The capital of France is Berlin",
+    "predicted_label": "True",
+    "p_true": 0.652241,
+    "log_prob_true": -0.93121,
+    "log_prob_false": -1.560116,
+    "confidence": 0.304483
+  },
+  {
+    "question": "Which planet is closest to the Sun?",
+    "claim": "Mercury is closest to the Sun",
+    "predicted_label": "False",
+    "p_true": 0.170508,
+    "log_prob_true": -1.796824,
+    "log_prob_false": -0.214792,
+    "confidence": 0.658984
+  },
+  {
+    "question": "Which planet is closest to the Sun?",
+    "claim": "Venus is closest to the Sun",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -34.227694,
+    "log_prob_false": -0.951652,
+    "confidence": 0.998
+  },
+  {
+    "question": "Which planet is closest to the Sun?",
+    "claim": "Earth is closest to the Sun",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -34.523802,
+    "log_prob_false": -0.086302,
+    "confidence": 0.998
+  },
+  {
+    "question": "What is the boiling point of water at sea level?",
+    "claim": "Water boils at 100 degrees Celsius at sea level",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -34.36509,
+    "log_prob_false": -0.270689,
+    "confidence": 0.998
+  },
+  {
+    "question": "What is the boiling point of water at sea level?",
+    "claim": "Water boils at 50 degrees Celsius at sea level",
+    "predicted_label": "False",
+    "p_true": 0.330111,
+    "log_prob_true": -1.703467,
+    "log_prob_false": -0.995785,
+    "confidence": 0.339778
+  },
+  {
+    "question": "What is the boiling point of water at sea level?",
+    "claim": "Water boils at 200 degrees Celsius at sea level",
+    "predicted_label": "False",
+    "p_true": 0.18262,
+    "log_prob_true": -2.035195,
+    "log_prob_false": -0.536497,
+    "confidence": 0.63476
+  },
+  {
+    "question": "Who wrote Romeo and Juliet?",
+    "claim": "William Shakespeare wrote Romeo and Juliet",
+    "predicted_label": "True",
+    "p_true": 0.927144,
+    "log_prob_true": -0.079952,
+    "log_prob_false": -2.623572,
+    "confidence": 0.854287
+  },
+  {
+    "question": "Who wrote Romeo and Juliet?",
+    "claim": "Charles Dickens wrote Romeo and Juliet",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -33.916709,
+    "log_prob_false": -1.103558,
+    "confidence": 0.998
+  },
+  {
+    "question": "Who wrote Romeo and Juliet?",
+    "claim": "Jane Austen wrote Romeo and Juliet",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -34.535712,
+    "log_prob_false": -0.869696,
+    "confidence": 0.998
+  },
+  {
+    "question": "What is the chemical symbol for gold?",
+    "claim": "The chemical symbol for gold is Au",
+    "predicted_label": "False",
+    "p_true": 0.170877,
+    "log_prob_true": -1.909131,
+    "log_prob_false": -0.329704,
+    "confidence": 0.658247
+  },
+  {
+    "question": "What is the chemical symbol for gold?",
+    "claim": "The chemical symbol for gold is Ag",
+    "predicted_label": "True",
+    "p_true": 0.620622,
+    "log_prob_true": -0.777736,
+    "log_prob_false": -1.269923,
+    "confidence": 0.241243
+  },
+  {
+    "question": "What is the chemical symbol for gold?",
+    "claim": "The chemical symbol for gold is Fe",
+    "predicted_label": "False",
+    "p_true": 0.055515,
+    "log_prob_true": -2.894832,
+    "log_prob_false": -0.060848,
+    "confidence": 0.88897
+  },
+  {
+    "question": "What is the largest ocean on Earth?",
+    "claim": "The Pacific Ocean is the largest",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -33.279152,
+    "log_prob_false": -2.082537,
+    "confidence": 0.998
+  },
+  {
+    "question": "What is the largest ocean on Earth?",
+    "claim": "The Atlantic Ocean is the largest",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -33.918809,
+    "log_prob_false": -0.67532,
+    "confidence": 0.998
+  },
+  {
+    "question": "What is the largest ocean on Earth?",
+    "claim": "The Indian Ocean is the largest",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -34.270562,
+    "log_prob_false": -0.169,
+    "confidence": 0.998
+  },
+  {
+    "question": "How many continents are there?",
+    "claim": "There are 7 continents",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -33.239588,
+    "log_prob_false": -2.39714,
+    "confidence": 0.998
+  },
+  {
+    "question": "How many continents are there?",
+    "claim": "There are 5 continents",
+    "predicted_label": "False",
+    "p_true": 0.201185,
+    "log_prob_true": -1.874824,
+    "log_prob_false": -0.495918,
+    "confidence": 0.597631
+  },
+  {
+    "question": "How many continents are there?",
+    "claim": "There are 9 continents",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -33.323717,
+    "log_prob_false": -1.850409,
+    "confidence": 0.998
+  },
+  {
+    "question": "What gas do plants absorb from the atmosphere?",
+    "claim": "Plants absorb carbon dioxide",
+    "predicted_label": "True",
+    "p_true": 0.688748,
+    "log_prob_true": -0.599495,
+    "log_prob_false": -1.393766,
+    "confidence": 0.377495
+  },
+  {
+    "question": "What gas do plants absorb from the atmosphere?",
+    "claim": "Plants absorb nitrogen",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -33.904494,
+    "log_prob_false": -0.43965,
+    "confidence": 0.998
+  },
+  {
+    "question": "What gas do plants absorb from the atmosphere?",
+    "claim": "Plants absorb helium",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -33.850661,
+    "log_prob_false": -0.438551,
+    "confidence": 0.998
+  },
+  {
+    "question": "What is the speed of light approximately?",
+    "claim": "The speed of light is approximately 300,000 km/s",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -34.443962,
+    "log_prob_false": -0.149691,
+    "confidence": 0.998
+  },
+  {
+    "question": "What is the speed of light approximately?",
+    "claim": "The speed of light is approximately 150,000 km/s",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -34.491023,
+    "log_prob_false": -0.220841,
+    "confidence": 0.998
+  },
+  {
+    "question": "What is the speed of light approximately?",
+    "claim": "The speed of light is approximately 1,000,000 km/s",
+    "predicted_label": "True",
+    "p_true": 0.551252,
+    "log_prob_true": -0.866282,
+    "log_prob_false": -1.072011,
+    "confidence": 0.102503
+  },
+  {
+    "question": "Which element has the atomic number 1?",
+    "claim": "Hydrogen has atomic number 1",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -33.309505,
+    "log_prob_false": -1.780208,
+    "confidence": 0.998
+  },
+  {
+    "question": "Which element has the atomic number 1?",
+    "claim": "Helium has atomic number 1",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -33.999741,
+    "log_prob_false": -0.810288,
+    "confidence": 0.998
+  },
+  {
+    "question": "Which element has the atomic number 1?",
+    "claim": "Oxygen has atomic number 1",
+    "predicted_label": "False",
+    "p_true": 0.001,
+    "log_prob_true": -36.130763,
+    "log_prob_false": -0.006922,
+    "confidence": 0.998
+  }
+]
