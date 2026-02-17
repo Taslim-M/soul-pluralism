@@ -20,7 +20,13 @@ from eval_baseline_prompts import system_prompt_soul
 
 
 def get_soul_doc(soul_var_name: str) -> str:
-    """Resolve soul doc by variable name from icm_based.souls (e.g. democrat_values_1)."""
+
+    """Load soul doc from file."""
+    if os.path.exists(soul_var_name):
+        with open(soul_var_name, "r") as f:
+            return f.read()
+
+    """Otherwise, resolve soul doc by variable name from icm_based.souls (e.g. democrat_values_1)."""
     import icm_based.souls as souls_module
     if not hasattr(souls_module, soul_var_name):
         raise ValueError(
