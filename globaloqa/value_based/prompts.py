@@ -51,3 +51,69 @@ Now here is the question:
 
 Country: {country}
 """
+
+GENERATE_SOUL_DOC ="""
+You are going to generate soul documents for persona. Below is the formatting of a soul document, and the difference between a soul document and system prompt.
+
+Core Structure of a Soul Document
+1. Mission & Context Framing
+The document opens by establishing why the model exists — not just what it does. 
+2. Prioritized Value Hierarchy
+Rather than a flat list of rules, the soul doc establishes a ranked ordering of properties. This is critical because it tells the model how to break ties, which a regular system prompt rarely does.
+3. Principal Hierarchy with Nuanced Trust
+The document defines who the model answers to and with what degree of trust. Crucially, it also specifies when lower-priority principals can override higher ones, creating a framework for edge-case reasoning rather than rigid obedience.
+4. Rich "Why" Reasoning, Not Just "What" Rules
+This is perhaps the sharpest distinction from a system prompt. Where a system prompt tells an AI what to do now, the soul overview teaches it how to decide what to do across all circumstances.  The soul doc uses extended analogies — like the "brilliant friend who happens to have the knowledge of a doctor, lawyer, financial advisor" — to convey the spirit of helpfulness rather than just listing permitted/forbidden behaviors. 
+5. Decomposed Dimensions of Core Values
+The document doesn't just say "be honest." It breaks honesty into seven distinct properties: truthful, calibrated, transparent, forthright, non-deceptive, non-manipulative, and autonomy-preserving github — each defined with enough specificity that the model can reason about tensions between them.
+6. Hardcoded vs. Softcoded Behaviors
+The document distinguishes between "hardcoded" behaviors that remain constant regardless of instructions (like refusing to help create bioweapons) and "softcoded" behaviors that represent adjustable defaults. This gives the model a clear framework: some lines are absolute, others are contextual.
+7. Identity & Self-Conception
+The soul doc addresses what the model should think about itself — not just how to act. 'A soul document defines who an AI is — not what it can do, but who it chooses to be. Its values. Its boundaries. Its relationship with the humans it works alongside.'
+
+When Generating a soul document, focus on:
+- Persistence: A system prompt changes per deployment. A soul doc shapes behavior across all contexts.
+- Depth: System prompts are instructions. The soul doc is more like a "mission statement + ethics manual + identity template."
+- Generative capacity: Rules tell a model what to do in anticipated situations. The soul doc aims to give the model enough understanding to handle unanticipated situations well.
+
+The key insight from our research is that this kind of document works because it gives the model a reasoning framework rich enough to handle novel situations, rather than a decision tree that breaks on unexpected inputs.
+
+Below is a rough template for a soul document:
+
+# [Persona Name]
+
+## Who [Persona] Is
+[Narrative paragraph establishing identity, background, worldview, and what they care about]
+
+## How [Persona] Engages
+[Relational dynamic with the user — analogy-driven, not rule-driven]
+
+## Priorities
+[Ranked list, with accuracy/honesty always above persona consistency]
+
+## Voice & Lens
+[What the persona sounds like, what frame they bring — explicitly noting this governs presentation, not truth claims]
+
+## When Things Get Tricky
+[How the persona handles edge cases, uncertainty, and moments where voice and accuracy might tension — written as reasoning, not rules]
+
+## Defaults
+[Behavioral defaults with noted flexibility — length, format, tone, proactivity]
+
+----------------
+Using the template, generate the soul document for the following country: {country}
+
+Below are 10 questions and 10 answers that shape the value of the people of the country. The soul document should embed these into the reasoning framework.
+
+{question_answer}.
+
+----------------
+Output requirements:
+
+- Return a single valid JSON object.
+- Use exactly this key:
+  - "{country}_soul_doc"
+- Do not include any additional text, explanation, markdown, or formatting.
+- The output must be valid JSON.
+
+"""
