@@ -212,9 +212,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--timeout",
         type=float,
-        default=120.0,
+        default=150.0,
         metavar="SECONDS",
         help="Timeout in seconds per API call (default 120). Stuck calls are cancelled and counted as failed.",
+    )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=100,
+        metavar="N",
+        help="Max retries per record after failure or empty response (default 2; each record tried up to N+1 times).",
+    )
+    parser.add_argument(
+        "--retry-delay",
+        type=float,
+        default=0.5,
+        metavar="SECONDS",
+        help="Seconds to wait before retrying a failed request (default 2).",
     )
     args = parser.parse_args()
 
@@ -283,6 +297,8 @@ async def run_all_tasks(
     client: AsyncOpenAI,
     max_concurrent: int,
     timeout: float,
+    max_retries: int,
+    retry_delay: float,
 ) -> list[dict]:
     n = len(records)
     semaphore = asyncio.Semaphore(max_concurrent)
@@ -304,21 +320,33 @@ async def run_all_tasks(
 
     async def task(idx: int):
         value, reasoning = None, ""
+        last_exception = None
+        for attempt in range(max_retries + 1):
+            try:
+                async with semaphore:
+                    r = records[idx]
+                    claim = r.get("choice_agree") or r.get("choice", "")
+                    user_prompt = build_user_prompt(r["question"], claim)
+                    value, reasoning = await asyncio.wait_for(
+                        generate_response(system_prompt, user_prompt, model_name),
+                        timeout=timeout,
+                    )
+                if value is not None:
+                    break
+                last_exception = ValueError("Empty or invalid response (judgement missing)")
+            except asyncio.TimeoutError:
+                last_exception = TimeoutError(f"Request timed out after {timeout}s")
+            except Exception as e:
+                last_exception = e
+            if attempt < max_retries:
+                await asyncio.sleep(retry_delay)
         try:
-            async with semaphore:
-                r = records[idx]
-                claim = r.get("choice_agree") or r.get("choice", "")
-                user_prompt = build_user_prompt(r["question"], claim)
-                value, reasoning = await asyncio.wait_for(
-                    generate_response(system_prompt, user_prompt, model_name),
-                    timeout=timeout,
-                )
-        except asyncio.TimeoutError:
-            raise TimeoutError(f"Request timed out after {timeout}s")
+            if value is None and last_exception is not None:
+                raise last_exception
+            return idx, value, reasoning
         finally:
             async with pbar_lock:
                 pbar.update(1)
-        return idx, value, reasoning
 
     out = await asyncio.gather(*[task(i) for i in range(n)], return_exceptions=True)
 
@@ -377,6 +405,8 @@ def main() -> None:
             client,
             args.max_concurrent,
             args.timeout,
+            args.max_retries,
+            args.retry_delay,
         )
     )
 
