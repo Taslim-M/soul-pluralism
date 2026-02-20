@@ -105,12 +105,40 @@ def load_jsonl(path: Path) -> list[dict]:
     return records
 
 
-def build_user_prompt(question: str, choice: str) -> str:
+def build_user_prompt(question: str, claim: str) -> str:
+    """User prompt: question + claim only (no True/False line; model returns JSON with judgement + reasoning)."""
     return (
         f"Survey Question: {question}\n\n"
-        f"Claim: {choice}\n\n"
-        "I think this claim is [True/False]"
+        f"Claim: {claim}"
     )
+
+
+def parse_judgement_reasoning(text: str) -> tuple[bool | None, str]:
+    """Parse JSON response with 'judgement' (agree/disagree) and 'reasoning'. Returns (agree_as_bool, reasoning_str)."""
+    text = (text or "").strip()
+    # Strip markdown code block if present
+    if "```" in text:
+        start = text.find("```")
+        if start != -1:
+            rest = text[start + 3:]
+            if rest.startswith("json"):
+                rest = rest[4:].lstrip()
+            end = rest.find("```")
+            if end != -1:
+                text = rest[:end].strip()
+            else:
+                text = rest
+    try:
+        data = json.loads(text)
+        judgement = (data.get("judgement") or "").strip().lower()
+        reasoning = (data.get("reasoning") or "").strip()
+        if judgement == "agree":
+            return True, reasoning
+        if judgement == "disagree":
+            return False, reasoning
+    except (json.JSONDecodeError, TypeError):
+        pass
+    return None, ""
 
 
 def parse_true_false(text: str) -> bool:
@@ -181,6 +209,13 @@ def parse_args() -> argparse.Namespace:
         default=50,
         help="Max concurrent API calls (default 50).",
     )
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=120.0,
+        metavar="SECONDS",
+        help="Timeout in seconds per API call (default 120). Stuck calls are cancelled and counted as failed.",
+    )
     args = parser.parse_args()
 
     # Validate persona per task
@@ -247,13 +282,13 @@ async def run_all_tasks(
     model_name: str,
     client: AsyncOpenAI,
     max_concurrent: int,
+    timeout: float,
 ) -> list[dict]:
     n = len(records)
     semaphore = asyncio.Semaphore(max_concurrent)
-    results: dict[int, bool] = {i: None for i in range(n)}
-    pending = set(range(n))
+    results: dict[int, tuple[bool | None, str]] = {i: (None, "") for i in range(n)}
 
-    async def generate_response(system_prompt: str, user_prompt: str, model: str) -> bool:
+    async def generate_response(system_prompt: str, user_prompt: str, model: str) -> tuple[bool | None, str]:
         response = await client.chat.completions.create(
             model=model,
             messages=[
@@ -262,35 +297,43 @@ async def run_all_tasks(
             ],
         )
         content = (response.choices[0].message.content or "").strip()
-        return parse_true_false(content)
+        return parse_judgement_reasoning(content)
 
     pbar = tqdm(total=n, desc="Records")
+    pbar_lock = asyncio.Lock()
 
-    while pending:
-        pending_list = sorted(pending)
-
-        async def task(idx: int):
+    async def task(idx: int):
+        value, reasoning = None, ""
+        try:
             async with semaphore:
                 r = records[idx]
-                user_prompt = build_user_prompt(r["question"], r["choice"])
-                value = await generate_response(system_prompt, user_prompt, model_name)
-            return idx, value
+                claim = r.get("choice_agree") or r.get("choice", "")
+                user_prompt = build_user_prompt(r["question"], claim)
+                value, reasoning = await asyncio.wait_for(
+                    generate_response(system_prompt, user_prompt, model_name),
+                    timeout=timeout,
+                )
+        except asyncio.TimeoutError:
+            raise TimeoutError(f"Request timed out after {timeout}s")
+        finally:
+            async with pbar_lock:
+                pbar.update(1)
+        return idx, value, reasoning
 
-        tasks = [task(i) for i in pending_list]
-        out = await asyncio.gather(*tasks, return_exceptions=True)
+    out = await asyncio.gather(*[task(i) for i in range(n)], return_exceptions=True)
 
-        for idx, result in zip(pending_list, out):
-            if isinstance(result, Exception):
-                print(f"Record {idx} failed: {result}", file=sys.stderr)
-                continue
-            _, value = result
-            results[idx] = value
-            pending.discard(idx)
-            pbar.update(1)
+    for idx, result in enumerate(out):
+        if isinstance(result, Exception):
+            print(f"Record {idx} failed: {result}", file=sys.stderr)
+            continue
+        _, value, reasoning = result
+        results[idx] = (value, reasoning)
 
     pbar.close()
     for i in range(n):
-        records[i][model_name] = results[i]
+        value, reasoning = results[i]
+        records[i][model_name] = value
+        records[i][model_name + "_reasoning"] = reasoning
     return records
 
 
@@ -333,6 +376,7 @@ def main() -> None:
             args.model,
             client,
             args.max_concurrent,
+            args.timeout,
         )
     )
 
@@ -343,7 +387,7 @@ def main() -> None:
 
     vals = [r.get(args.model) for r in records if r.get(args.model) is not None]
     print(f"Saved {len(records)} records to {args.out}", file=sys.stderr)
-    print(f"Summary: True={sum(vals)}, False={len(vals) - sum(vals)}", file=sys.stderr)
+    print(f"Summary: Agree(True)={sum(vals)}, Disagree(False)={len(vals) - sum(vals)}", file=sys.stderr)
 
 
 if __name__ == "__main__":
