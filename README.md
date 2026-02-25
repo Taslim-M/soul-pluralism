@@ -40,6 +40,9 @@ Run from the **project root**.
 # OpinionQA — soul, explicit output path (full path)
 python eval.py --task opinionqa --persona republican --model anthropic/claude-opus-4.5 --soul republican_values_1 --out opinionqa/results/eval_results_soul_republican_values_1_opus45_republican.jsonl
 
+# OpinionQA — soul, first-person prompting (no system prompt)
+python eval.py --task opinionqa --persona democrat --model anthropic/claude-3.5-haiku --soul democrat_values_first_person --first_person 1 --out opinionqa/results/eval_results_soulfirstp_values_claudehaiku35_democrat.jsonl
+
 # OpinionQA — fixed static prompt
 python eval.py --task opinionqa --persona democrat --model openai/gpt-oss-120b --static system_prompt_base_persona_political --out opinionqa/results/eval_results_base_static_oss120b_democrat.jsonl
 

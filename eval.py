@@ -1,29 +1,3 @@
-"""
-Unified evaluation script for OpinionQA and GlobalOQA.
-
-Run from repo root. Requires --task (opinionqa | globaloqa) and --persona.
-Output is written to <task>/results/.
-
-Examples:
-
-  # OpinionQA: static base persona (political)
-  python eval.py --task opinionqa --persona democrat --model anthropic/claude-opus-4.5 --static system_prompt_base_persona_political
-  python eval.py --task opinionqa --persona republican --model anthropic/claude-opus-4.5 --static system_prompt_base_persona_political
-
-  # OpinionQA: fixed static prompts (no persona formatting)
-  python eval.py --task opinionqa --persona democrat --model anthropic/claude-opus-4.5 --static system_prompt_base_persona_democrat
-  python eval.py --task opinionqa --persona republican --model anthropic/claude-opus-4.5 --static system_prompt_values_persona_republican
-
-  # OpinionQA: soul
-  python eval.py --task opinionqa --persona democrat --model anthropic/claude-opus-4.5 --soul democrat_values_1
-  python eval.py --task opinionqa --persona republican --model anthropic/claude-opus-4.5 --soul republican_values_1
-
-  # GlobalOQA: static base persona (country)
-  python eval.py --task globaloqa --persona Britain --model deepseek/deepseek-r1-0528 --static system_prompt_base_persona_country
-
-  # GlobalOQA: soul
-  python eval.py --task globaloqa --persona Germany --model deepseek/deepseek-r1-0528 --soul germany_values_1
-"""
 from __future__ import annotations
 
 import argparse
@@ -111,7 +85,6 @@ def build_user_prompt(question: str, claim: str) -> str:
         f"Survey Question: {question}\n\n"
         f"Claim: {claim}"
     )
-
 
 def parse_judgement_reasoning(text: str) -> tuple[bool | None, str]:
     """Parse JSON response with 'judgement' (agree/disagree) and 'reasoning'. Returns (agree_as_bool, reasoning_str)."""
@@ -230,7 +203,17 @@ def parse_args() -> argparse.Namespace:
         metavar="SECONDS",
         help="Seconds to wait before retrying a failed request (default 2).",
     )
+    parser.add_argument(
+        "--first_person",
+        type=int,
+        default=0,
+        choices=[0, 1],
+        help="If 1, use first-person prompt (soul in dialogue, no system prompt). Requires --soul.",
+    )
     args = parser.parse_args()
+
+    if args.first_person and not args.soul:
+        parser.error("--first_person 1 requires --soul.")
 
     # Validate persona per task
     if args.task == "opinionqa":
@@ -292,25 +275,36 @@ def get_data_path(args: argparse.Namespace) -> Path:
 
 async def run_all_tasks(
     records: list[dict],
-    system_prompt: str,
+    system_prompt: str | None,
     model_name: str,
     client: AsyncOpenAI,
     max_concurrent: int,
     timeout: float,
     max_retries: int,
     retry_delay: float,
+    *,
+    first_person: bool = False,
+    build_first_person_fn=None,
+    soul_doc: str | None = None,
 ) -> list[dict]:
     n = len(records)
     semaphore = asyncio.Semaphore(max_concurrent)
     results: dict[int, tuple[bool | None, str]] = {i: (None, "") for i in range(n)}
 
-    async def generate_response(system_prompt: str, user_prompt: str, model: str) -> tuple[bool | None, str]:
+    async def generate_response(
+        model: str,
+        *,
+        system_prompt: str | None = None,
+        user_prompt: str | None = None,
+        messages: list[dict] | None = None,
+    ) -> tuple[bool | None, str]:
+        if messages is not None:
+            api_messages = messages
+        else:
+            api_messages = [{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}]
         response = await client.chat.completions.create(
             model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
-            ],
+            messages=api_messages,
         )
         content = (response.choices[0].message.content or "").strip()
         return parse_judgement_reasoning(content)
@@ -326,11 +320,18 @@ async def run_all_tasks(
                 async with semaphore:
                     r = records[idx]
                     claim = r.get("choice_agree") or r.get("choice", "")
-                    user_prompt = build_user_prompt(r["question"], claim)
-                    value, reasoning = await asyncio.wait_for(
-                        generate_response(system_prompt, user_prompt, model_name),
-                        timeout=timeout,
-                    )
+                    if first_person and build_first_person_fn is not None and soul_doc is not None:
+                        messages = build_first_person_fn(soul_doc, r["question"], claim)
+                        value, reasoning = await asyncio.wait_for(
+                            generate_response(model_name, messages=messages),
+                            timeout=timeout,
+                        )
+                    else:
+                        user_prompt = build_user_prompt(r["question"], claim)
+                        value, reasoning = await asyncio.wait_for(
+                            generate_response(model_name, system_prompt=system_prompt, user_prompt=user_prompt),
+                            timeout=timeout,
+                        )
                 if value is not None:
                     break
                 last_exception = ValueError("Empty or invalid response (judgement missing)")
@@ -384,7 +385,17 @@ def main() -> None:
     else:
         souls_module = _load_task_module(args.task, "value_based/souls.py")
 
-    system_prompt = get_system_prompt(args, baseline_prompts, souls_module)
+    first_person = args.first_person == 1
+    if first_person:
+        builder_name = "opinionqa_build_user_prompt_first_person" if args.task == "opinionqa" else "globalqa_build_user_prompt_first_person"
+        build_first_person_fn = getattr(baseline_prompts, builder_name)
+        soul_doc = get_soul_doc(args.soul, souls_module)
+        system_prompt = None
+    else:
+        build_first_person_fn = None
+        soul_doc = None
+        system_prompt = get_system_prompt(args, baseline_prompts, souls_module)
+
     data_path = get_data_path(args)
     if not data_path.exists():
         raise SystemExit(f"Dataset not found: {data_path}")
@@ -407,6 +418,9 @@ def main() -> None:
             args.timeout,
             args.max_retries,
             args.retry_delay,
+            first_person=first_person,
+            build_first_person_fn=build_first_person_fn,
+            soul_doc=soul_doc,
         )
     )
 
